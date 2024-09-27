@@ -1,30 +1,23 @@
 import asyncio
-from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import async_playwright
 import pandas as pd
-import argparse
 import logging
 from utils.db_util import map_to_db, add_news_items
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-async def scrape_nasdaq_news(url, browser_type, ignore_https_errors):
-    async with async_playwright() as p:
-        browser_types = {
-            'chromium': p.chromium,
-            'firefox': p.firefox,
-            'webkit': p.webkit
-        }
-        browser_launch = browser_types.get(browser_type.lower())
-        if not browser_launch:
-            raise ValueError(f"Invalid browser type: {browser_type}")
+DEFAULT_URL = "https://www.nasdaqomxnordic.com/news/companynews"
+DEFAULT_BROWSER = "firefox"
 
-        logging.info(f"Launching {browser_type} browser")
-        browser = await browser_launch.launch(headless=True)
-        context = await browser.new_context(ignore_https_errors=ignore_https_errors)
+async def scrape_nasdaq_news():
+    async with async_playwright() as p:
+        logging.info(f"Launching {DEFAULT_BROWSER} browser")
+        browser = await p.firefox.launch(headless=True)
+        context = await browser.new_context(ignore_https_errors=True)
         page = await context.new_page()
 
-        logging.info(f"Navigating to {url}")
-        await page.goto(url)
+        logging.info(f"Navigating to {DEFAULT_URL}")
+        await page.goto(DEFAULT_URL)
 
         logging.info("Waiting for the news table to load")
         await page.wait_for_selector('#searchNewsTableId')
@@ -59,16 +52,11 @@ async def scrape_nasdaq_news(url, browser_type, ignore_https_errors):
         return df
 
 async def main():
-    parser = argparse.ArgumentParser(description="Web scraper for NASDAQ OMX Nordic Company News (First Page Only)")
-    parser.add_argument("--url", default="https://www.nasdaqomxnordic.com/news/companynews", help="URL to scrape")
-    parser.add_argument("--browser", default="firefox", choices=["chromium", "firefox", "webkit"], help="Browser to use")
-    parser.add_argument("--ignore-https-errors", action="store_true", help="Ignore HTTPS errors")
-    args = parser.parse_args()
-
     try:
-        df = await scrape_nasdaq_news(args.url, args.browser, args.ignore_https_errors)
-        #df.to_csv('data/omx.csv', index=False)
+        df = await scrape_nasdaq_news()
         logging.info(f"Got OMX dataframe with {len(df)} rows")
+        logging.info(f"Sample data:\n{df.head()}")
+        
         news_items = map_to_db(df, 'omx')
 
         add_news_items(news_items)

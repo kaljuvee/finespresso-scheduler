@@ -1,32 +1,23 @@
 import asyncio
-from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import async_playwright
 import pandas as pd
-import argparse
 import logging
 from utils.db_util import map_to_db, add_news_items
-from utils.openai_util import summarize, tag_news
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 URL_PREFIX = 'https://live.euronext.com'
+DEFAULT_URL = "https://live.euronext.com/en/products/equities/company-news"
+DEFAULT_BROWSER = "firefox"
 
-async def scrape_euronext(url, browser_type, ignore_https_errors):
+async def scrape_euronext():
     async with async_playwright() as p:
-        browser_types = {
-            'chromium': p.chromium,
-            'firefox': p.firefox,
-            'webkit': p.webkit
-        }
-        browser_launch = browser_types.get(browser_type.lower())
-        if not browser_launch:
-            raise ValueError(f"Invalid browser type: {browser_type}")
-
-        logging.info(f"Launching {browser_type} browser")
-        browser = await browser_launch.launch(headless=True)
-        context = await browser.new_context(ignore_https_errors=ignore_https_errors)
+        logging.info(f"Launching {DEFAULT_BROWSER} browser")
+        browser = await p.firefox.launch(headless=True)
+        context = await browser.new_context(ignore_https_errors=True)
         page = await context.new_page()
 
-        logging.info(f"Navigating to {url}")
-        await page.goto(url)
+        logging.info(f"Navigating to {DEFAULT_URL}")
+        await page.goto(DEFAULT_URL)
 
         logging.info("Waiting for the news table to load")
         await page.wait_for_selector('table.table')
@@ -63,15 +54,10 @@ async def scrape_euronext(url, browser_type, ignore_https_errors):
         return df
 
 async def main():
-    parser = argparse.ArgumentParser(description="Web scraper for Euronext Company News")
-    parser.add_argument("--url", default="https://live.euronext.com/en/products/equities/company-news", help="URL to scrape")
-    parser.add_argument("--browser", default="firefox", choices=["chromium", "firefox", "webkit"], help="Browser to use")
-    parser.add_argument("--ignore-https-errors", action="store_true", help="Ignore HTTPS errors")
-    args = parser.parse_args()
-
     try:
-        df = await scrape_euronext(args.url, args.browser, args.ignore_https_errors)
-        logging.info(f"Got {df.head()} from Euronext")
+        df = await scrape_euronext()
+        logging.info(f"Got {len(df)} rows from Euronext")
+        logging.info(f"Sample data:\n{df.head()}")
         
         # Map dataframe to News objects
         news_items = map_to_db(df, 'euronext')

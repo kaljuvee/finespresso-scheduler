@@ -4,15 +4,15 @@ from flask_apscheduler import APScheduler
 from datetime import datetime
 import logging
 import asyncio
+import os
 from tasks.baltics import main as baltics_main
 from tasks.euronext import main as euronext_main
 from tasks.omx import main as omx_main
 from utils.db_util import create_tables
-import os
+
 app = Flask(__name__)
 scheduler = APScheduler()
 scheduler.init_app(app)
-scheduler.start()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,9 +26,9 @@ run_history = []
 
 # Store task statuses and frequencies
 task_info = {
-    'baltics': {'status': 'Not run', 'frequency': 1},
-    'euronext': {'status': 'Not run', 'frequency': 2},
-    'omx': {'status': 'Not run', 'frequency': 3}
+    'baltics': {'status': 'Not run', 'frequency': 6},
+    'euronext': {'status': 'Not run', 'frequency': 1},
+    'omx': {'status': 'Not run', 'frequency': 1}
 }
 
 def run_task(task_name, task_func):
@@ -53,6 +53,15 @@ def schedule_task(task_name, task_func, frequency):
         scheduler.remove_job(job_id)
     scheduler.add_job(id=job_id, func=run_task, trigger='interval', hours=frequency, args=[task_name, task_func])
     logger.info(f"Scheduled {task_name} task to run every {frequency} hours")
+
+def init_schedules():
+    task_functions = {
+        'baltics': baltics_main,
+        'euronext': euronext_main,
+        'omx': omx_main
+    }
+    for task_name, info in task_info.items():
+        schedule_task(task_name, task_functions[task_name], info['frequency'])
 
 @app.route('/')
 def index():
@@ -111,5 +120,7 @@ def get_task_info():
     return jsonify(task_info)
 
 if __name__ == '__main__':
+    init_schedules()
+    scheduler.start()
     port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port, debug=False)
