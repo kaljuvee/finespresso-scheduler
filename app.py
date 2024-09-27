@@ -8,7 +8,7 @@ from tasks.baltics import main as baltics_main
 from tasks.euronext import main as euronext_main
 from tasks.omx import main as omx_main
 from utils.db_util import create_tables
-
+import os
 app = Flask(__name__)
 scheduler = APScheduler()
 scheduler.init_app(app)
@@ -111,4 +111,5 @@ def get_task_info():
     return jsonify(task_info)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port, debug=False)
