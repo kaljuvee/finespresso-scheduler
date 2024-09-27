@@ -111,20 +111,3 @@ Once the application is running:
 1. Open a web browser and navigate to `http://localhost:8000` (or your server's address).
 2. Use the web interface to start/stop the scheduler, run tasks manually, and set task frequencies.
 3. The scheduler will run tasks automatically based on the set frequencies.
-
-## Troubleshooting
-
-- If you encounter any "module not found" errors, ensure all dependencies are installed:
-  ```
-  pip install -r requirements.txt
-  ```
-- For database connection issues, check your DATABASE_URL in the .env file.
-- If the application doesn't start, ensure the start.sh script is executable.
-
-## Contributing
-
-[Add your contribution guidelines here]
-
-## License
-
-[Add your license information here]
