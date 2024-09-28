@@ -42,7 +42,8 @@ async def scrape_nasdaq_news():
                     'title': headline,
                     'link': link,
                     'publisher_topic': category,
-                    'publisher': 'Nasdaq OMX Nordic'
+                    'publisher': 'omx',
+                    'status': 'raw'
                 })
 
         await browser.close()
@@ -60,9 +61,9 @@ async def main():
         news_items = map_to_db(df, 'omx')
 
         add_news_items(news_items)
-        logging.info(f"Added {len(news_items)} news items to the database")
+        logging.info(f"OMX: added {len(news_items)} news items to the database")
     except Exception as e:
-        logging.error(f"An error occurred: {str(e)}")
+        logging.error(f"OMX: An error occurred: {str(e)}")
 
 if __name__ == "__main__":
     asyncio.run(main())

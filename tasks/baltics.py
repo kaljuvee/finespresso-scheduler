@@ -46,9 +46,10 @@ def parse_rss_feed(url, tags):
             'link': link,
             'company': company,
             'published_date': pub_date,
-            'publisher': 'Nasdaq Baltic',
+            'publisher': 'baltics',
             'industry': '',
-            'publisher_topic': ''
+            'publisher_topic': '',
+            'status': 'raw'
         })
 
         logging.debug(f"Added news item to dataframe: {title}")
@@ -56,11 +57,6 @@ def parse_rss_feed(url, tags):
     df = pd.DataFrame(data)
     logging.info(f"Created dataframe with {len(df)} rows")
     return df
-
-def write_to_csv(df, filename):
-    logging.info(f"Writing dataframe to CSV: {filename}")
-    df.to_csv(filename, index=False)
-    logging.info("CSV file written successfully")
 
 def main():
     logging.info("Starting main function")
@@ -81,11 +77,10 @@ def main():
         # Map dataframe to News objects
         news_items = map_to_db(news_df, 'baltics')
 
-        # Store news in the database
-        logging.info(f"Adding {len(news_items)} news items to the database")
-        add_news_items(news_items)
-        
-        logging.info("Main function completed")
+
+        add_news_items(news_items)                # Store news in the database
+        logging.info(f"Nasdal Baltics: added {len(news_items)} news items to the database")
+
     except Exception as e:
         logging.critical(f"An unexpected error occurred: {e}", exc_info=True)
 

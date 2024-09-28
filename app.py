@@ -8,6 +8,8 @@ import os
 from tasks.baltics import main as baltics_main
 from tasks.euronext import main as euronext_main
 from tasks.omx import main as omx_main
+from tasks.omx import clean as clean_main
+from tasks.omx import enrich as enrich_main
 from utils.db_util import create_tables
 
 app = Flask(__name__)
@@ -28,7 +30,9 @@ run_history = []
 task_info = {
     'baltics': {'status': 'Not run', 'frequency': 6},
     'euronext': {'status': 'Not run', 'frequency': 1},
-    'omx': {'status': 'Not run', 'frequency': 1}
+    'omx': {'status': 'Not run', 'frequency': 1},
+    'clean': {'status': 'Not run', 'frequency': 2},
+    'enrich': {'status': 'Not run', 'frequency': 2}
 }
 
 def run_task(task_name, task_func):
@@ -58,7 +62,9 @@ def init_schedules():
     task_functions = {
         'baltics': baltics_main,
         'euronext': euronext_main,
-        'omx': omx_main
+        'omx': omx_main,
+        'clean': clean_main,
+        'enrich': enrich_main
     }
     for task_name, info in task_info.items():
         schedule_task(task_name, task_functions[task_name], info['frequency'])

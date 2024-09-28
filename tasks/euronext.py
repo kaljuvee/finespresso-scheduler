@@ -44,7 +44,8 @@ async def scrape_euronext():
                     'link': URL_PREFIX + link,
                     'industry': industry,
                     'publisher_topic': topic,
-                    'publisher': 'Euronext'
+                    'publisher': 'euronext',
+                    'status': 'raw'
                 })
 
         await browser.close()
@@ -65,9 +66,9 @@ async def main():
         # Store news in the database
         logging.info(f"Adding {len(news_items)} news items to the database")
         add_news_items(news_items)
-        logging.info("Added news items to the database")
+        logging.info("Euronext: added news items to the database")
     except Exception as e:
-        logging.error(f"An error occurred: {str(e)}")
+        logging.error(f"Euronext: An error occurred: {str(e)}")
 
 if __name__ == "__main__":
     asyncio.run(main())
